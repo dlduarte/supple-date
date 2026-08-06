@@ -1,0 +1,68 @@
+name: Publish package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão a publicar (ex.: 3.0.0). Vazio usa a versão do pom.xml.'
+        required: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 17: o Lombok 1.18.38 ainda não suporta o JDK 25, e o release 8 continua disponível aqui.
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+          server-id: github
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_TOKEN
+
+      - name: Resolver versão
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION=""
+          fi
+          if [ -n "$VERSION" ]; then
+            mvn -B versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false
+          else
+            VERSION=$(mvn -q -B help:evaluate -Dexpression=project.version -DforceStdout)
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Publicando versão $VERSION"
+
+      - name: Publicar no GitHub Packages
+        run: mvn -B deploy
+        env:
+          MAVEN_USERNAME: ${{ github.actor }}
+          MAVEN_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Anexar jars ao release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: |
+            target/supple-date-${{ steps.version.outputs.version }}.jar
+            target/supple-date-${{ steps.version.outputs.version }}-sources.jar
+            target/supple-date-${{ steps.version.outputs.version }}-javadoc.jar

@@ -4,36 +4,111 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>br.com.dld</groupId>
+    <groupId>io.github.dlduarte</groupId>
     <artifactId>supple-date</artifactId>
-    <version>2.4.0</version>
+    <version>3.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>supple-date</name>
+    <description>Java library for date manipulation, conversion and formatting</description>
+    <url>https://github.com/dlduarte/supple-date</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>dlduarte</id>
+            <name>David Duarte</name>
+            <url>https://github.com/dlduarte</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/dlduarte/supple-date.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/dlduarte/supple-date.git</developerConnection>
+        <url>https://github.com/dlduarte/supple-date</url>
+    </scm>
 
     <distributionManagement>
         <repository>
-            <id>nexus</id>
-            <url>https://nexus.softensistemas.com.br/repository/maven-releases</url>
+            <id>github</id>
+            <name>GitHub dlduarte Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/dlduarte/supple-date</url>
         </repository>
     </distributionManagement>
-
-    <dependencies>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <version>24.0.1</version>
-            <scope>compile</scope>
-        </dependency>
-    </dependencies>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.38</lombok.version>
     </properties>
+
+    <dependencies>
+        <!-- Lombok é apagado do bytecode, então não pode vazar para quem consome a lib -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doclint>none</doclint>
+                    <failOnError>false</failOnError>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
