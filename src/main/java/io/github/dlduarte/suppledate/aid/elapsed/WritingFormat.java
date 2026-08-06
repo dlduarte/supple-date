@@ -80,7 +80,7 @@ public class WritingFormat {
     }
 
     public String write(long years, long days, long hours, long minutes, long seconds) {
-        if (days == 0 && hours == 0 && minutes < 1) {
+        if (years == 0 && days == 0 && hours == 0 && minutes < 1) {
             return ifNow;
         }
 
@@ -91,6 +91,10 @@ public class WritingFormat {
         setPair(pairs, hour, hours);
         setPair(pairs, minute, minutes);
         setPair(pairs, second, seconds);
+
+        if (pairs.isEmpty()) {
+            return ifNow;
+        }
 
         return formattingOption.format(pairs);
     }

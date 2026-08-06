@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versão a publicar (ex.: 3.0.0). Vazio usa a versão do pom.xml.'
+        description: 'Versão a publicar (ex.: 2.5.0). Vazio usa a versão do pom.xml.'
         required: false
 
 permissions:

@@ -40,7 +40,7 @@ Date resultado = Temporality.of("17/05/2024", Chronos.BAR_D4)
 - [Exceções](#exceções)
 - [Receitas](#receitas)
 - [Limitações conhecidas](#limitações-conhecidas)
-- [Migrando da 2.x para a 3.x](#migrando-da-2x-para-a-3x)
+- [Migrando da 2.4.x para a 2.5.0](#migrando-da-24x-para-a-250)
 - [Build local](#build-local)
 - [Licença](#licença)
 
@@ -54,7 +54,7 @@ Date resultado = Temporality.of("17/05/2024", Chronos.BAR_D4)
 |---|---|
 | `groupId` | `io.github.dlduarte` |
 | `artifactId` | `supple-date` |
-| `version` | `3.0.0` |
+| `version` | `2.5.0` |
 
 A biblioteca **não tem dependências em runtime** (o Lombok é usado apenas em tempo de compilação, com escopo `provided`) e roda em **Java 8 ou superior**.
 
@@ -78,7 +78,7 @@ O GitHub Packages exige autenticação **mesmo para pacotes públicos**. São do
     <dependency>
         <groupId>io.github.dlduarte</groupId>
         <artifactId>supple-date</artifactId>
-        <version>3.0.0</version>
+        <version>2.5.0</version>
     </dependency>
 </dependencies>
 ```
@@ -122,7 +122,7 @@ repositories {
 }
 
 dependencies {
-    implementation("io.github.dlduarte:supple-date:3.0.0")
+    implementation("io.github.dlduarte:supple-date:2.5.0")
 }
 ```
 
@@ -141,11 +141,11 @@ Se você não quiser lidar com tokens, o JitPack compila a tag do repositório e
 <dependency>
     <groupId>com.github.dlduarte</groupId>
     <artifactId>supple-date</artifactId>
-    <version>v3.0.0</version>
+    <version>v2.5.0</version>
 </dependency>
 ```
 
-> Pelo JitPack o `groupId` é `com.github.dlduarte` e a versão é a **tag** (`v3.0.0`), não o número da versão. O pacote Java continua sendo `io.github.dlduarte.suppledate`.
+> Pelo JitPack o `groupId` é `com.github.dlduarte` e a versão é a **tag** (`v2.5.0`), não o número da versão. O pacote Java continua sendo `io.github.dlduarte.suppledate`.
 
 Você também pode baixar o `.jar` diretamente da [página de releases](https://github.com/dlduarte/supple-date/releases).
 
@@ -464,6 +464,9 @@ Temporality.timeElapsedInWriting(Duration.ofHours(5).plusMinutes(2));
 Temporality.timeElapsedInWriting(Duration.ofHours(1));
 // "1 hora"      (singular automático)
 
+Temporality.timeElapsedInWriting(Duration.ofDays(365));
+// "1 ano"
+
 Temporality.timeElapsedInWriting(Duration.ofSeconds(30));
 // "Agora"       (abaixo de 1 minuto)
 ```
@@ -472,7 +475,8 @@ Repare que:
 
 - unidades com valor **zero são omitidas** — nada de "0 horas";
 - o **singular/plural** é escolhido pelo valor;
-- o **último separador** é diferente dos demais (`", "` entre os itens, `" e "` antes do último).
+- o **último separador** é diferente dos demais (`", "` entre os itens, `" e "` antes do último);
+- o texto de "agora" só aparece quando **nenhuma** unidade configurada tem valor — seja porque a duração é curta demais, seja porque a granularidade escolhida não a representa.
 
 ### Customizando com WritingFormat
 
@@ -801,39 +805,38 @@ LocalDateTime ldt = Temporality.of(calendarLegado).parse(LocalDateTime.class);
 
 ## Limitações conhecidas
 
-Comportamentos verificados na versão 3.0.0 que valem atenção:
+Comportamentos verificados na versão 2.5.0 que valem atenção:
 
-1. **Durações múltiplas exatas de 365 dias caem no texto de "agora".**
-   `WritingFormat.write` decide se a duração é insignificante olhando apenas dias, horas e minutos — e os dias vêm do resto da divisão por 365. Assim, `Duration.ofDays(365)` produz `"Agora"` em vez de `"1 ano"`.
+1. **O ano é fixado em 365 dias.** O cálculo do tempo por extenso não considera anos bissextos, então textos longos podem divergir em um dia.
 
-2. **O ano é fixado em 365 dias.** O cálculo do tempo por extenso não considera anos bissextos, então textos longos podem divergir em um dia.
-
-3. **`BASIC_HM` só serve para saída.** Um pattern apenas de horário não consegue produzir um `LocalDateTime` completo na entrada:
+2. **`BASIC_HM` só serve para saída.** Um pattern apenas de horário não consegue produzir um `LocalDateTime` completo na entrada:
    ```java
    Temporality.of("1430", Chronos.BASIC_HM);                  // DateTimeParseException
    Temporality.now().parse(String.class, Chronos.BASIC_HM);   // "1430" ✔
    ```
 
-4. **`now(ZoneId)` não converte o relógio para o fuso.** O instante atual é capturado com `LocalDateTime.now()` no fuso do sistema. Para obter o horário de outro fuso:
+3. **`now(ZoneId)` não converte o relógio para o fuso.** O instante atual é capturado com `LocalDateTime.now()` no fuso do sistema. Para obter o horário de outro fuso:
    ```java
    Temporality.of(LocalDateTime.now(ZoneId.of("Asia/Tokyo")), Chronos.BAR_D4HMS);
    ```
 
-5. **`parse(String.class, pattern, zoneId)` não desloca o horário.** A formatação de texto apenas rotula o `LocalDateTime` com o fuso; para converter de fato, passe por `Date`/`Instant`.
+4. **`parse(String.class, pattern, zoneId)` não desloca o horário.** A formatação de texto apenas rotula o `LocalDateTime` com o fuso; para converter de fato, passe por `Date`/`Instant`.
 
-6. **`Temporality` é mutável e não é thread-safe.** Não compartilhe a mesma instância entre threads.
+5. **`Temporality` é mutável e não é thread-safe.** Não compartilhe a mesma instância entre threads.
 
 ---
 
-## Migrando da 2.x para a 3.x
+## Migrando da 2.4.x para a 2.5.0
 
-A 3.0.0 é uma release **breaking de empacotamento** — a API é idêntica, só mudaram as coordenadas e o pacote Java.
+> ⚠️ **Apesar de ser um incremento *minor*, a 2.5.0 quebra a compilação de quem vem da 2.4.x.** As coordenadas Maven e o pacote Java mudaram, então os `import` precisam ser ajustados. Não é uma atualização transparente — trate como se fosse uma major.
 
-| | 2.x | 3.x |
+A API em si é idêntica: nenhuma assinatura de método mudou.
+
+| | 2.4.x | 2.5.0 |
 |---|---|---|
 | `groupId` | `br.com.dld` | `io.github.dlduarte` |
 | Pacote Java | `br.com.dld.suppledate` | `io.github.dlduarte.suppledate` |
-| Repositório | Nexus privado | GitHub Packages |
+| Repositório | Nexus privado | GitHub Packages / JitPack |
 | Lombok | escopo `compile` (vazava para o consumidor) | escopo `provided` |
 
 A migração é uma substituição de texto no projeto consumidor:
@@ -852,16 +855,16 @@ Nenhuma assinatura de método mudou — depois de ajustar os `import`, o código
 mvn clean install
 ```
 
-Compila com **JDK 8–24** (o Lombok 1.18.38 ainda não suporta o JDK 25) e gera três artefatos:
+Compila com **JDK 8–24** (o Lombok 1.18.38 ainda não suporta o JDK 25), roda a suíte JUnit 5 e gera três artefatos:
 
-- `supple-date-3.0.0.jar`
-- `supple-date-3.0.0-sources.jar`
-- `supple-date-3.0.0-javadoc.jar`
+- `supple-date-2.5.0.jar`
+- `supple-date-2.5.0-sources.jar`
+- `supple-date-2.5.0-javadoc.jar`
 
 Para publicar uma nova versão, atualize a `<version>` no `pom.xml` e crie a tag — o workflow [`publish.yml`](.github/workflows/publish.yml) cuida do resto:
 
 ```bash
-git tag v3.0.1 && git push origin v3.0.1
+git tag v2.5.1 && git push origin v2.5.1
 ```
 
 ---
